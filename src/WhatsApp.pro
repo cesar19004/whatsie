@@ -64,6 +64,7 @@ SOURCES += \
         downloadmanagerwidget.cpp \
         downloadwidget.cpp \
         elidedlabel.cpp \
+        languages.cpp \
         lock.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -89,6 +90,7 @@ HEADERS += \
     downloadmanagerwidget.h \
     downloadwidget.h \
     elidedlabel.h \
+    languages.h \
     lock.h \
     mainwindow.h \
     notificationpopup.h \
