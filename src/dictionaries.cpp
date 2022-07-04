@@ -9,12 +9,11 @@
 QString DICTIONARY_FILE_SUFFIX = ".bdic";
 
 Dictionaries::Dictionaries(QObject *parent) : QObject(parent) {
-  setParent(parent);
 }
 
 Dictionaries::~Dictionaries() { this->deleteLater(); }
 
-QString Dictionaries::GetDictionaryPath() {
+QString Dictionaries::getDictionaryPath() {
   QString dict_path;
 
   // the environment variable takes precedence on all platforms
@@ -53,16 +52,16 @@ QString Dictionaries::GetDictionaryPath() {
   return QString();
 }
 
-QStringList Dictionaries::GetDictionaries() {
+QStringList Dictionaries::getDictionaries() {
   QStringList dictionaries;
-  QString dict_path = GetDictionaryPath();
+  QString dict_path = getDictionaryPath();
   if (dict_path.isEmpty()) {
     return dictionaries;
   }
   QDir dictDir(dict_path);
   if (dictDir.exists()) {
     QStringList filters;
-    // Look for all *.bdic files.
+    // Look for all *DICTIONARY_FILE_SUFFIX files.
     filters << "*" + DICTIONARY_FILE_SUFFIX;
     dictDir.setNameFilters(filters);
     QStringList dictionary_files = dictDir.entryList();
