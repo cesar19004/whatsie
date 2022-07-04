@@ -5,6 +5,7 @@
 #include "utils.h"
 
 #include <QSettings>
+#include <QTranslator>
 #include <QWidget>
 
 namespace Ui {
@@ -48,10 +49,12 @@ public slots:
   void updateAppLockPasswordViewer();
   void appAutoLockingSetChecked(bool checked);
   void toggleTheme();
+  void loadLanguages(QStringList languages);
 protected slots:
   bool eventFilter(QObject *obj, QEvent *event);
   void closeEvent(QCloseEvent *event);
 
+  void changeEvent(QEvent *event);
 private slots:
   QString cachePath();
   QString persistentStoragePath();
@@ -99,11 +102,18 @@ private slots:
 
   void on_fullWidthViewCheckbox_toggled(bool checked);
 
+  void on_langComboBox_currentIndexChanged(int index);
+
+  void loadLanguage(const QString &rLanguage);
+  void switchTranslator(QTranslator &translator, const QString &filename);
 private:
   Ui::SettingsWidget *ui;
   QString engineCachePath, enginePersistentStoragePath;
   QSettings settings;
   QTimer *themeSwitchTimer;
+  QString langPath, currLang;
+  QTranslator translator;
+
 };
 
 #endif // SETTINGSWIDGET_H

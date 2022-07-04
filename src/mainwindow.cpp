@@ -1,3 +1,4 @@
+#include "languages.h"
 #include "mainwindow.h"
 
 #include <QInputDialog>
@@ -372,6 +373,9 @@ void MainWindow::initSettingWidget() {
 
     // spell checker
     settingsWidget->loadDictionaries(m_dictionaries);
+
+    //localization
+    settingsWidget->loadLanguages(Languages::getLanguages());
   }
 }
 
@@ -794,7 +798,7 @@ void MainWindow::createWebEngine() {
   widgetSize.setHorizontalStretch(1);
   widgetSize.setVerticalStretch(1);
 
-  m_dictionaries = Dictionaries::GetDictionaries();
+  m_dictionaries = Dictionaries::getDictionaries();
 
   WebView *webEngine = new WebView(this, m_dictionaries);
   setCentralWidget(webEngine);

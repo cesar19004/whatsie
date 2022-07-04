@@ -7,6 +7,7 @@
 #include <QStyle>
 
 #include "automatictheme.h"
+#include "languages.h"
 
 extern QString defaultUserAgentStr;
 extern int defaultAppAutoLockDuration;
@@ -18,6 +19,8 @@ SettingsWidget::SettingsWidget(QWidget *parent, int screenNumber,
                                QString enginePersistentStoragePath)
     : QWidget(parent), ui(new Ui::SettingsWidget) {
   ui->setupUi(this);
+
+  this->langPath = Languages::getTranslationPath();
 
   this->engineCachePath = engineCachePath;
   this->enginePersistentStoragePath = enginePersistentStoragePath;
@@ -772,4 +775,96 @@ void SettingsWidget::on_chnageCurrentPasswordPushButton_clicked() {
 void SettingsWidget::on_fullWidthViewCheckbox_toggled(bool checked) {
   settings.setValue("fullWidthView", checked);
   emit updateFullWidthView(checked);
+}
+
+void SettingsWidget::loadLanguages(QStringList languages) {
+  // set up supported spellcheck dictionaries
+  QStringList uiLangNames;
+  foreach (QString lang_name, languages) { uiLangNames.append(lang_name); }
+
+  uiLangNames.removeDuplicates();
+  uiLangNames.sort();
+
+  // add to ui
+  ui->langComboBox->blockSignals(true);
+  foreach (const QString lang_name, uiLangNames) {
+    QString short_name = QString(lang_name).split("_").last();
+    short_name = (short_name.isEmpty() || short_name.contains("-"))
+                     ? QString(lang_name).split("-").last()
+                     : short_name;
+    short_name = short_name.isEmpty() ? "XX" : short_name;
+    short_name = short_name.length() > 2 ? short_name.left(2) : short_name;
+    QIcon icon(QString(":/icons/flags/%1.png").arg(short_name.toLower()));
+    if (icon.isNull() == false)
+      ui->langComboBox->addItem(icon, lang_name, lang_name);
+    else
+      ui->langComboBox->addItem(QIcon(":/icons/flags/xx.png"), lang_name,
+                                lang_name);
+  }
+  ui->langComboBox->blockSignals(false);
+
+  // load settings for langComboBox
+  QString lang_name = settings.value("lang", "en-US").toString();
+  int pos = ui->langComboBox->findText(lang_name);
+  if (pos == -1) {
+    pos = ui->langComboBox->findText("en-US");
+    if (pos == -1) {
+      pos = 0;
+    }
+  }
+  ui->langComboBox->setCurrentIndex(pos);
+}
+
+void SettingsWidget::on_langComboBox_currentIndexChanged(int index) {
+  QString languageCode = ui->langComboBox->itemData(index).toString();
+  settings.setValue("lang", languageCode);
+  loadLanguage(languageCode);
+}
+
+void SettingsWidget::loadLanguage(const QString &rLanguage) {
+  qDebug() << rLanguage;
+  if (currLang == rLanguage) {
+    return;
+  }
+  currLang = rLanguage;
+  qDebug("loadLanguage %s", rLanguage.toLatin1().data());
+
+  QLocale locale = QLocale(currLang);
+  QLocale::setDefault(locale);
+  QString languageName = QLocale::languageToString(locale.language());
+
+  // translator contains the app's translations
+  QString resourceFileName = QString("%1/%2.qm").arg(langPath, rLanguage);
+  switchTranslator(translator, resourceFileName);
+  qInfo("Current Language changed to %s", languageName.toLatin1().data());
+}
+
+void SettingsWidget::switchTranslator(QTranslator &translator,
+                                      const QString &filename) {
+  // remove the old translator
+  qApp->removeTranslator(&translator);
+
+  // load the new translator
+  bool result = translator.load(filename);
+
+  qDebug("translator.load(%s) %s", filename.toLatin1().data(),
+         result ? "true" : "false");
+
+  if (!result) {
+    qWarning("*** Failed translator.load(\"%s\")", filename.toLatin1().data());
+    return;
+  }
+  qApp->installTranslator(&translator);
+}
+
+void SettingsWidget::changeEvent(QEvent *event) {
+  if (event->type() == QEvent::LanguageChange) {
+    ui->retranslateUi(this);
+  }
+  if (event->type() == QEvent::LocaleChange) {
+    QString locale = QLocale::system().name();
+    locale.truncate(locale.lastIndexOf('_'));
+    loadLanguage(locale);
+  }
+  QWidget::changeEvent(event);
 }
